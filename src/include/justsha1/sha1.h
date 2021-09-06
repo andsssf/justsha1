@@ -1,0 +1,1 @@
+char* sha1(const char * data);

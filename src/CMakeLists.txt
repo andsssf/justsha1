@@ -1,0 +1,1 @@
+add_library(justsha1 sha1.cpp)
