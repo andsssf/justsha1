@@ -1,1 +1,1 @@
-char* sha1(const char * data);
+bool sha1(const char * input, char * output);
