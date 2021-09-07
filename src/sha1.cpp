@@ -88,33 +88,33 @@ bool sha1(const char * input, __UINT8_TYPE__ * output) {
             {
             case 0:
                 temp = (b & c) | ((~b) & d);
-                temp += k[0];
+                temp = isBigEnd ? k[0] + temp : bigMode(bigMode(k[0]) + bigMode(temp));
                 break;
             case 1:
                 temp = (b  ^ c ^ d);
-                temp += k[1];
+                temp = isBigEnd ? k[1] + temp : bigMode(bigMode(k[1]) + bigMode(temp));
                 break;
             case 2:
                 temp = (b & c) | (b & d) | (c & d);
-                temp += k[2];
+                temp = isBigEnd ? k[2] + temp : bigMode(bigMode(k[2]) + bigMode(temp));
                 break;
             case 3:
                 temp = (b ^ c ^ d);
-                temp += k[3];
+                temp = isBigEnd ? k[3] + temp : bigMode(bigMode(k[3]) + bigMode(temp));
                 break;
             }
-            temp += temp2 + e + sub_group[j];
+            temp = isBigEnd ? temp + temp2 + e + sub_group[j] : bigMode(bigMode(temp) + bigMode(temp2) + bigMode(e) + bigMode(sub_group[j]));
             e = d;
             d = c;
             c = isBigEnd ? b << 30 | b >> 2 : bigMode(bigMode(b) << 30 | bigMode(b) >> 2);
             b = a;
             a = temp;
         }
-        A += a;
-        B += b;
-        C += c;
-        D += d;
-        E += e;
+        A = isBigEnd? A + a  : bigMode(bigMode(a) + bigMode(A));
+        B = isBigEnd? B + b  : bigMode(bigMode(b) + bigMode(B));
+        C = isBigEnd? C + c  : bigMode(bigMode(c) + bigMode(C));
+        D = isBigEnd? D + d  : bigMode(bigMode(d) + bigMode(D));
+        E = isBigEnd? E + e  : bigMode(bigMode(e) + bigMode(E));
     }
 
     delete []data;
