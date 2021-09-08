@@ -4,7 +4,9 @@
 using namespace std;
 
 int main() {
-    __UINT8_TYPE__ result[20] = {0};
-    sha1("abc", result);
+    char result[41] = {0};
+    if (justsha1::sha1("justsha1", result)) {
+        cout << string(result)  << endl;
+    }
     return 0;
 }

@@ -2,7 +2,7 @@
 #include <cstring>
 
 // 机器大小端模式是个问题，主要是位移运算的不一致性
-bool isBigEndian(){  
+bool isBigEndian(){
     union{
         int a;  
         char b;  
@@ -24,7 +24,7 @@ __UINT64_TYPE__ bigMode(__UINT64_TYPE__ value) {
     return (high_uint64 << 32) + low_uint64;
 }
 
-bool sha1(const char * input, __UINT8_TYPE__ * output) {
+bool justsha1::sha1(const __UINT8_TYPE__ * input, __UINT64_TYPE__ size,  __UINT8_TYPE__ * output) {
     bool isBigEnd = isBigEndian();
 
     __UINT32_TYPE__ A = isBigEnd ? 0x67452301 : bigMode((__UINT32_TYPE__)0x67452301);
@@ -39,7 +39,7 @@ bool sha1(const char * input, __UINT8_TYPE__ * output) {
         for (int i = 0; i < 4; i++) k[i] = bigMode(k[i]);
     }
 
-    __UINT64_TYPE__ size = strlen(input) * 8;
+    size *= 8;
     __UINT8_TYPE__ * data = nullptr;
     __UINT64_TYPE__ total_size = 0;
     
@@ -130,5 +130,21 @@ bool sha1(const char * input, __UINT8_TYPE__ * output) {
     *(__UINT32_TYPE__*)(output + 12) = D;
     *(__UINT32_TYPE__*)(output + 16) = E;
 
-    return false;
+    return true;
 }
+
+bool justsha1::sha1(const char * input, char * output, bool toUpperCase) {
+    __UINT8_TYPE__ origin_output[20];
+
+    if (!justsha1::sha1((const __UINT8_TYPE__ *)input, strlen(input), origin_output)) return false;
+    // hex to string
+    size_t index = 0;
+    for (__UINT8_TYPE__ c : origin_output) {
+        char high = c / 16, low = c % 16;
+        output[index] = high < 10 ? '0' + high : (toUpperCase ? 'A' : 'a' + high - 10);
+        output[index + 1] = low < 10 ? '0' + low : (toUpperCase ? 'A' : 'a' + low - 10);
+        index += 2;
+    }
+    return true;
+}
+
