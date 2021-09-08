@@ -24,15 +24,20 @@ __UINT64_TYPE__ bigMode(__UINT64_TYPE__ value) {
     return (high_uint64 << 32) + low_uint64;
 }
 
-bool justsha1::sha1(const __UINT8_TYPE__ * input, __UINT64_TYPE__ size,  __UINT8_TYPE__ * output) {
-    bool isBigEnd = isBigEndian();
+justsha1::Sha1::Sha1() {
+    this->isBigEnd = isBigEndian();
+    this->reset();
+}
 
-    __UINT32_TYPE__ A = isBigEnd ? 0x67452301 : bigMode((__UINT32_TYPE__)0x67452301);
-    __UINT32_TYPE__ B = isBigEnd ? 0xEFCDAB89 : bigMode((__UINT32_TYPE__)0xEFCDAB89);
-    __UINT32_TYPE__ C = isBigEnd ? 0x98BADCFE : bigMode((__UINT32_TYPE__)0x98BADCFE);
-    __UINT32_TYPE__ D = isBigEnd ? 0x10325476 : bigMode((__UINT32_TYPE__)0x10325476);
-    __UINT32_TYPE__ E = isBigEnd ? 0xC3D2E1F0 : bigMode((__UINT32_TYPE__)0xC3D2E1F0);
+void justsha1::Sha1::reset() {
+    this->A = isBigEnd ? 0x67452301 : bigMode((__UINT32_TYPE__)0x67452301);
+    this->B = isBigEnd ? 0xEFCDAB89 : bigMode((__UINT32_TYPE__)0xEFCDAB89);
+    this->C = isBigEnd ? 0x98BADCFE : bigMode((__UINT32_TYPE__)0x98BADCFE);
+    this->D = isBigEnd ? 0x10325476 : bigMode((__UINT32_TYPE__)0x10325476);
+    this->E = isBigEnd ? 0xC3D2E1F0 : bigMode((__UINT32_TYPE__)0xC3D2E1F0);
+}
 
+bool justsha1::Sha1::update(const __UINT8_TYPE__ * input, __UINT64_TYPE__ size) {
     __UINT32_TYPE__ k[4] = {0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6};
 
     if (!isBigEnd) {
@@ -59,13 +64,6 @@ bool justsha1::sha1(const __UINT8_TYPE__ * input, __UINT64_TYPE__ size,  __UINT8
         // 数据拷贝
         for (int i = 0; i < size / 8; i++) data[i] = input[i];
     }
-
-    // 添加原长度信息，原本是小端存储，需要转换为大端存储
-    // __UINT8_TYPE__ *p = (__UINT8_TYPE__*)&size;
-    // // int64 有8个字节
-    // for (int i = 0; i < 8; i++) {
-    //     data[total_size / 8 - 1 - i] = *(p + i);
-    // }
 
     *(__UINT64_TYPE__*)(data + total_size / 8 - 8) = isBigEnd ? size : bigMode(size);
 
@@ -123,21 +121,25 @@ bool justsha1::sha1(const __UINT8_TYPE__ * input, __UINT64_TYPE__ size,  __UINT8
     }
 
     delete []data;
+    return true;
+}
 
+bool justsha1::Sha1::update(const char * input) {
+    return update((const __UINT8_TYPE__ *)input, strlen(input));
+}
+
+void justsha1::Sha1::getResult(__UINT8_TYPE__ * output) {
     *(__UINT32_TYPE__*)output = A;
     *(__UINT32_TYPE__*)(output + 4) = B;
     *(__UINT32_TYPE__*)(output + 8) = C;
     *(__UINT32_TYPE__*)(output + 12) = D;
     *(__UINT32_TYPE__*)(output + 16) = E;
-
-    return true;
 }
 
-bool justsha1::sha1(const char * input, char * output, bool toUpperCase) {
+void justsha1::Sha1::getResultString(char * output, bool toUpperCase) {
     __UINT8_TYPE__ origin_output[20];
+    getResult(origin_output);
 
-    if (!justsha1::sha1((const __UINT8_TYPE__ *)input, strlen(input), origin_output)) return false;
-    // hex to string
     size_t index = 0;
     for (__UINT8_TYPE__ c : origin_output) {
         char high = c / 16, low = c % 16;
@@ -145,6 +147,4 @@ bool justsha1::sha1(const char * input, char * output, bool toUpperCase) {
         output[index + 1] = low < 10 ? '0' + low : (toUpperCase ? 'A' : 'a' + low - 10);
         index += 2;
     }
-    return true;
 }
-

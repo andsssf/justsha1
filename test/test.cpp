@@ -2,10 +2,14 @@
 #include <iostream>
 
 using namespace std;
+using namespace justsha1;
 
 int main() {
     char result[41] = {0};
-    if (justsha1::sha1("justsha1", result)) {
+    Sha1 s;
+    bool flag = s.update("justsha1");
+    if (flag) {
+        s.getResultString(result);
         cout << string(result)  << endl;
     }
     return 0;
