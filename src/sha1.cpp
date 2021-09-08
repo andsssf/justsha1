@@ -25,18 +25,23 @@ __UINT64_TYPE__ bigMode(__UINT64_TYPE__ value) {
 }
 
 bool sha1(const char * input, __UINT8_TYPE__ * output) {
-    __UINT32_TYPE__ A = 0x67452301;
-    __UINT32_TYPE__ B = 0xEFCDAB89;
-    __UINT32_TYPE__ C = 0x98BADCFE;
-    __UINT32_TYPE__ D = 0x10325476;
-    __UINT32_TYPE__ E = 0xC3D2E1F0;
+    bool isBigEnd = isBigEndian();
 
-    __UINT32_TYPE__ k[4] = {0x5A827999, 0x6ED9EBA1, 0x8F188CDC, 0xCA62C1D6};
+    __UINT32_TYPE__ A = isBigEnd ? 0x67452301 : bigMode((__UINT32_TYPE__)0x67452301);
+    __UINT32_TYPE__ B = isBigEnd ? 0xEFCDAB89 : bigMode((__UINT32_TYPE__)0xEFCDAB89);
+    __UINT32_TYPE__ C = isBigEnd ? 0x98BADCFE : bigMode((__UINT32_TYPE__)0x98BADCFE);
+    __UINT32_TYPE__ D = isBigEnd ? 0x10325476 : bigMode((__UINT32_TYPE__)0x10325476);
+    __UINT32_TYPE__ E = isBigEnd ? 0xC3D2E1F0 : bigMode((__UINT32_TYPE__)0xC3D2E1F0);
+
+    __UINT32_TYPE__ k[4] = {0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6};
+
+    if (!isBigEnd) {
+        for (int i = 0; i < 4; i++) k[i] = bigMode(k[i]);
+    }
 
     __UINT64_TYPE__ size = strlen(input) * 8;
     __UINT8_TYPE__ * data = nullptr;
     __UINT64_TYPE__ total_size = 0;
-    bool isBigEnd = isBigEndian();
     
     if (size % 512 != 448) {
         __int64 x = (512 + 448 - size % 512) % 512;
@@ -91,7 +96,7 @@ bool sha1(const char * input, __UINT8_TYPE__ * output) {
                 temp = isBigEnd ? k[0] + temp : bigMode(bigMode(k[0]) + bigMode(temp));
                 break;
             case 1:
-                temp = (b  ^ c ^ d);
+                temp = (b ^ c ^ d);
                 temp = isBigEnd ? k[1] + temp : bigMode(bigMode(k[1]) + bigMode(temp));
                 break;
             case 2:
