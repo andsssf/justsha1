@@ -1,14 +1,19 @@
+typedef __UINT8_TYPE__ BYTE;
+typedef __UINT32_TYPE__ WORD;
+typedef __UINT64_TYPE__ DWORD;
+
 namespace justsha1 {
     class Sha1 {
         public:
         Sha1();
         void reset();
-        bool update(const __UINT8_TYPE__ * input, __UINT64_TYPE__ size);
+        bool update(const BYTE * input, DWORD size);
         bool update(const char * input);
-        void getResult(__UINT8_TYPE__ * output);
-        void getResultString(char * output, bool toUpperCase = false);
+        void getDigest(BYTE * output);
+        void getDigestString(char * output, bool toUpperCase = false);
         private:
-        __UINT32_TYPE__ A, B, C, D, E;
+        WORD A, B, C, D, E;
         bool isBigEnd;
+        bool isFinish;
     };
 }
