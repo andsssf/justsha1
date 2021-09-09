@@ -35,92 +35,113 @@ void justsha1::Sha1::reset() {
     this->C = isBigEnd ? 0x98BADCFE : bigMode((WORD)0x98BADCFE);
     this->D = isBigEnd ? 0x10325476 : bigMode((WORD)0x10325476);
     this->E = isBigEnd ? 0xC3D2E1F0 : bigMode((WORD)0xC3D2E1F0);
+
+    this->isFinish = false;
+    memset(data, 0, 64);
+    data_size = 0;
+    total_size = 0;
 }
 
-bool justsha1::Sha1::update(const BYTE * input, DWORD size) {
+bool justsha1::Sha1::computerOneBlock() {
     WORD k[4] = {0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6};
-
     if (!isBigEnd) {
         for (int i = 0; i < 4; i++) k[i] = bigMode(k[i]);
     }
-
-    size *= 8;
-    BYTE * data = nullptr;
-    DWORD total_size = 0;
+    // BYTE * data = nullptr;
+    // DWORD total_size = 0;
     
-    if (size % 512 != 448) {
-        DWORD x = (512 + 448 - size % 512) % 512;
-        data = new BYTE[(size + x) / 8 + 8];
-        memset(data, 0x0, (size + x) / 8 + 8);
-        total_size = size + x + 64;
-        // 数据拷贝
-        for (int i = 0; i < size / 8; i++) data[i] = input[i];
-        // 补位
-        data[size / 8] = 0x80;
-    } else {
-        data = new BYTE[size / 8 + 8];
-        memset(data, 0x0, size / 8 + 8);
-        total_size = size + 64;
-        // 数据拷贝
-        for (int i = 0; i < size / 8; i++) data[i] = input[i];
+    // if (size % 512 != 448) {
+    //     DWORD x = (512 + 448 - size % 512) % 512;
+    //     data = new BYTE[(size + x) / 8 + 8];
+    //     memset(data, 0x0, (size + x) / 8 + 8);
+    //     total_size = size + x + 64;
+    //     // 数据拷贝
+    //     for (int i = 0; i < size / 8; i++) data[i] = input[i];
+    //     // 补位
+    //     data[size / 8] = 0x80;
+    // } else {
+    //     data = new BYTE[size / 8 + 8];
+    //     memset(data, 0x0, size / 8 + 8);
+    //     total_size = size + 64;
+    //     // 数据拷贝
+    //     for (int i = 0; i < size / 8; i++) data[i] = input[i];
+    // }
+
+    // *(DWORD*)(data + total_size / 8 - 8) = isBigEnd ? size : bigMode(size);
+
+    // DWORD num_group = total_size / 512;
+
+    // for (int i = 0; i < num_group; i++) {
+    WORD sub_group[80] = {0};
+    WORD * temp_sub_group = (WORD*)(data);  // 定位子组 0-15 的数据
+    
+    // 生成子组
+    for (int j = 0; j < 80; j++) {
+        if (j < 16) sub_group[j] = temp_sub_group[j];
+        else {
+            WORD temp = sub_group[j - 3] ^ sub_group[j - 8] ^ sub_group[j - 14] ^ sub_group[j - 16];
+            temp = isBigEnd ? temp : bigMode(temp);
+            sub_group[j] = isBigEnd ? temp << 1 | temp >> 31 : bigMode(temp << 1 | temp >> 31);
+        }
     }
 
-    *(DWORD*)(data + total_size / 8 - 8) = isBigEnd ? size : bigMode(size);
+    WORD a = A, b = B, c = C, d = D, e = E;
 
-    DWORD num_group = total_size / 512;
-
-    for (int i = 0; i < num_group; i++) {
-        WORD sub_group[80] = {0};
-        WORD * temp_sub_group = (WORD*)(data + i*64);  // 定位子组 0-15 的数据
-        
-        // 生成子组
-        for (int j = 0; j < 80; j++) {
-            if (j < 16) sub_group[j] = temp_sub_group[j];
-            else {
-                WORD temp = sub_group[j - 3] ^ sub_group[j - 8] ^ sub_group[j - 14] ^ sub_group[j - 16];
-                temp = isBigEnd ? temp : bigMode(temp);
-                sub_group[j] = isBigEnd ? temp << 1 | temp >> 31 : bigMode(temp << 1 | temp >> 31);
-            }
+    for (int j = 0; j < 80; j++) {
+        WORD temp, temp2 = isBigEnd ? a << 5 | a >> 27 : bigMode(bigMode(a) << 5 | bigMode(a) >> 27);
+        switch (j / 20)
+        {
+        case 0:
+            temp = (b & c) | ((~b) & d);
+            temp = isBigEnd ? k[0] + temp : bigMode(bigMode(k[0]) + bigMode(temp));
+            break;
+        case 1:
+            temp = (b ^ c ^ d);
+            temp = isBigEnd ? k[1] + temp : bigMode(bigMode(k[1]) + bigMode(temp));
+            break;
+        case 2:
+            temp = (b & c) | (b & d) | (c & d);
+            temp = isBigEnd ? k[2] + temp : bigMode(bigMode(k[2]) + bigMode(temp));
+            break;
+        case 3:
+            temp = (b ^ c ^ d);
+            temp = isBigEnd ? k[3] + temp : bigMode(bigMode(k[3]) + bigMode(temp));
+            break;
         }
-
-        WORD a = A, b = B, c = C, d = D, e = E;
-
-        for (int j = 0; j < 80; j++) {
-            WORD temp, temp2 = isBigEnd ? a << 5 | a >> 27 : bigMode(bigMode(a) << 5 | bigMode(a) >> 27);
-            switch (j / 20)
-            {
-            case 0:
-                temp = (b & c) | ((~b) & d);
-                temp = isBigEnd ? k[0] + temp : bigMode(bigMode(k[0]) + bigMode(temp));
-                break;
-            case 1:
-                temp = (b ^ c ^ d);
-                temp = isBigEnd ? k[1] + temp : bigMode(bigMode(k[1]) + bigMode(temp));
-                break;
-            case 2:
-                temp = (b & c) | (b & d) | (c & d);
-                temp = isBigEnd ? k[2] + temp : bigMode(bigMode(k[2]) + bigMode(temp));
-                break;
-            case 3:
-                temp = (b ^ c ^ d);
-                temp = isBigEnd ? k[3] + temp : bigMode(bigMode(k[3]) + bigMode(temp));
-                break;
-            }
-            temp = isBigEnd ? temp + temp2 + e + sub_group[j] : bigMode(bigMode(temp) + bigMode(temp2) + bigMode(e) + bigMode(sub_group[j]));
-            e = d;
-            d = c;
-            c = isBigEnd ? b << 30 | b >> 2 : bigMode(bigMode(b) << 30 | bigMode(b) >> 2);
-            b = a;
-            a = temp;
-        }
-        A = isBigEnd? A + a  : bigMode(bigMode(a) + bigMode(A));
-        B = isBigEnd? B + b  : bigMode(bigMode(b) + bigMode(B));
-        C = isBigEnd? C + c  : bigMode(bigMode(c) + bigMode(C));
-        D = isBigEnd? D + d  : bigMode(bigMode(d) + bigMode(D));
-        E = isBigEnd? E + e  : bigMode(bigMode(e) + bigMode(E));
+        temp = isBigEnd ? temp + temp2 + e + sub_group[j] : bigMode(bigMode(temp) + bigMode(temp2) + bigMode(e) + bigMode(sub_group[j]));
+        e = d;
+        d = c;
+        c = isBigEnd ? b << 30 | b >> 2 : bigMode(bigMode(b) << 30 | bigMode(b) >> 2);
+        b = a;
+        a = temp;
     }
+    A = isBigEnd? A + a  : bigMode(bigMode(a) + bigMode(A));
+    B = isBigEnd? B + b  : bigMode(bigMode(b) + bigMode(B));
+    C = isBigEnd? C + c  : bigMode(bigMode(c) + bigMode(C));
+    D = isBigEnd? D + d  : bigMode(bigMode(d) + bigMode(D));
+    E = isBigEnd? E + e  : bigMode(bigMode(e) + bigMode(E));
+    // }
+    return true;
+}
 
-    delete []data;
+bool justsha1::Sha1::update(const BYTE * input, DWORD size) {
+    if (isFinish) return false;
+    DWORD index = 0;
+    while (data_size + size > 64) {
+        memcpy(data + data_size, input, 64 - data_size);
+        computerOneBlock();
+        size -= 64 - data_size;
+        index += 64 - data_size;
+        total_size += 64 - data_size;
+        data_size = 0;
+    }
+    memcpy(data + data_size, input + index, size);
+    data_size += size;
+    total_size += size;
+    if (data_size == 64) {
+        computerOneBlock();
+        data_size = 0;
+    }
     return true;
 }
 
@@ -129,6 +150,11 @@ bool justsha1::Sha1::update(const char * input) {
 }
 
 void justsha1::Sha1::getDigest(BYTE * output) {
+    if (!isFinish) {
+        padingDataBlock();
+        computerOneBlock();
+    }
+
     *(__UINT32_TYPE__*)output = A;
     *(__UINT32_TYPE__*)(output + 4) = B;
     *(__UINT32_TYPE__*)(output + 8) = C;
@@ -147,4 +173,24 @@ void justsha1::Sha1::getDigestString(char * output, bool toUpperCase) {
         output[index + 1] = low < 10 ? '0' + low : (toUpperCase ? 'A' : 'a' + low - 10);
         index += 2;
     }
+}
+
+bool justsha1::Sha1::padingDataBlock() {
+    if (isFinish) return false;
+    if (data_size != 56) {
+        DWORD pad_size = (64 + 56 - data_size) % 64;
+        if (data_size + pad_size < 64) {
+            data[data_size] = 0x80;
+            memset(data + data_size + 1, 0x0, pad_size - 1);
+        } else {
+            data[data_size] = 0x80;
+            memset(data + data_size + 1, 0x0, 64 - data_size - 1);
+            computerOneBlock();
+            memset(data, 0x0, 56);
+        }
+    }
+
+    *(DWORD*)(data + 56) = isBigEnd ? total_size * 8 : bigMode(total_size * 8);
+    isFinish = true;
+    return true;
 }

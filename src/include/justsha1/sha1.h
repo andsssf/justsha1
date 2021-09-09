@@ -15,5 +15,10 @@ namespace justsha1 {
         WORD A, B, C, D, E;
         bool isBigEnd;
         bool isFinish;
+        BYTE data[64];
+        DWORD data_size;
+        DWORD total_size;
+        bool computerOneBlock();
+        bool padingDataBlock();
     };
 }

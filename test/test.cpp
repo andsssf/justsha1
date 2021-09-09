@@ -8,8 +8,9 @@ using namespace justsha1;
 int main() {
     char result[41] = {0};
     Sha1 s;
-    bool flag = s.update("justsha1");
-    if (flag) {
+    bool flag1 = s.update("just");
+    bool flag2 = s.update("sha1");
+    if (flag1 && flag2) {
         s.getDigestString(result);
         cout << string(result)  << endl;
     }
