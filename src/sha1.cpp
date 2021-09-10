@@ -47,31 +47,7 @@ bool justsha1::Sha1::computerOneBlock() {
     if (!isBigEnd) {
         for (int i = 0; i < 4; i++) k[i] = bigMode(k[i]);
     }
-    // BYTE * data = nullptr;
-    // DWORD total_size = 0;
     
-    // if (size % 512 != 448) {
-    //     DWORD x = (512 + 448 - size % 512) % 512;
-    //     data = new BYTE[(size + x) / 8 + 8];
-    //     memset(data, 0x0, (size + x) / 8 + 8);
-    //     total_size = size + x + 64;
-    //     // 数据拷贝
-    //     for (int i = 0; i < size / 8; i++) data[i] = input[i];
-    //     // 补位
-    //     data[size / 8] = 0x80;
-    // } else {
-    //     data = new BYTE[size / 8 + 8];
-    //     memset(data, 0x0, size / 8 + 8);
-    //     total_size = size + 64;
-    //     // 数据拷贝
-    //     for (int i = 0; i < size / 8; i++) data[i] = input[i];
-    // }
-
-    // *(DWORD*)(data + total_size / 8 - 8) = isBigEnd ? size : bigMode(size);
-
-    // DWORD num_group = total_size / 512;
-
-    // for (int i = 0; i < num_group; i++) {
     WORD sub_group[80] = {0};
     WORD * temp_sub_group = (WORD*)(data);  // 定位子组 0-15 的数据
     
