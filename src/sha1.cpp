@@ -128,7 +128,7 @@ bool justsha1::Sha1::update(const BYTE * input, DWORD size) {
     if (isFinish) return false;
     DWORD index = 0;
     while (data_size + size > 64) {
-        memcpy(data + data_size, input, 64 - data_size);
+        memcpy(data + data_size, input + index, 64 - data_size);
         computerOneBlock();
         size -= 64 - data_size;
         index += 64 - data_size;
