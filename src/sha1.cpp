@@ -96,7 +96,7 @@ bool justsha1::Sha1::computerOneBlock() {
     C = isBigEnd? C + c  : bigMode(bigMode(c) + bigMode(C));
     D = isBigEnd? D + d  : bigMode(bigMode(d) + bigMode(D));
     E = isBigEnd? E + e  : bigMode(bigMode(e) + bigMode(E));
-    // }
+
     return true;
 }
 
