@@ -1,6 +1,8 @@
 #include "justsha1/sha1.h"
 #include <cstring>
 
+using namespace justsha1;
+
 // 机器大小端模式是个问题，主要是位移运算的不一致性
 bool isBigEndian(){
     union{
@@ -24,12 +26,12 @@ DWORD bigMode(DWORD value) {
     return (high_uint64 << 32) + low_uint64;
 }
 
-justsha1::Sha1::Sha1() {
+Sha1::Sha1() {
     this->isBigEnd = isBigEndian();
     this->reset();
 }
 
-void justsha1::Sha1::reset() {
+void Sha1::reset() {
     this->A = isBigEnd ? 0x67452301 : bigMode((WORD)0x67452301);
     this->B = isBigEnd ? 0xEFCDAB89 : bigMode((WORD)0xEFCDAB89);
     this->C = isBigEnd ? 0x98BADCFE : bigMode((WORD)0x98BADCFE);
@@ -42,7 +44,7 @@ void justsha1::Sha1::reset() {
     total_size = 0;
 }
 
-bool justsha1::Sha1::computerOneBlock() {
+bool Sha1::computerOneBlock() {
     WORD k[4] = {0x5A827999, 0x6ED9EBA1, 0x8F1BBCDC, 0xCA62C1D6};
     if (!isBigEnd) {
         for (int i = 0; i < 4; i++) k[i] = bigMode(k[i]);
@@ -100,7 +102,7 @@ bool justsha1::Sha1::computerOneBlock() {
     return true;
 }
 
-bool justsha1::Sha1::update(const BYTE * input, DWORD size) {
+bool Sha1::update(const BYTE * input, DWORD size) {
     if (isFinish) return false;
     DWORD index = 0;
     while (data_size + size > 64) {
@@ -121,11 +123,11 @@ bool justsha1::Sha1::update(const BYTE * input, DWORD size) {
     return true;
 }
 
-bool justsha1::Sha1::update(const char * input) {
+bool Sha1::update(const char * input) {
     return update((const BYTE *)input, strlen(input));
 }
 
-void justsha1::Sha1::getDigest(BYTE * output) {
+void Sha1::getDigest(BYTE * output) {
     if (!isFinish) {
         padingDataBlock();
         computerOneBlock();
@@ -138,7 +140,7 @@ void justsha1::Sha1::getDigest(BYTE * output) {
     *(__UINT32_TYPE__*)(output + 16) = E;
 }
 
-void justsha1::Sha1::getDigestString(char * output, bool toUpperCase) {
+void Sha1::getDigestString(char * output, bool toUpperCase) {
     BYTE origin_output[20];
     getDigest(origin_output);
 
@@ -151,7 +153,7 @@ void justsha1::Sha1::getDigestString(char * output, bool toUpperCase) {
     }
 }
 
-bool justsha1::Sha1::padingDataBlock() {
+bool Sha1::padingDataBlock() {
     if (isFinish) return false;
     if (data_size != 56) {
         DWORD pad_size = (64 + 56 - data_size) % 64;

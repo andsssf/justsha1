@@ -1,8 +1,7 @@
-typedef __UINT8_TYPE__ BYTE;
-typedef __UINT32_TYPE__ WORD;
-typedef __UINT64_TYPE__ DWORD;
-
 namespace justsha1 {
+    typedef __UINT8_TYPE__ BYTE;
+    typedef __UINT32_TYPE__ WORD;
+    typedef __UINT64_TYPE__ DWORD;
     class Sha1 {
         public:
         Sha1();
