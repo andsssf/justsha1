@@ -133,11 +133,11 @@ void Sha1::getDigest(BYTE * output) {
         computerOneBlock();
     }
 
-    *(__UINT32_TYPE__*)output = A;
-    *(__UINT32_TYPE__*)(output + 4) = B;
-    *(__UINT32_TYPE__*)(output + 8) = C;
-    *(__UINT32_TYPE__*)(output + 12) = D;
-    *(__UINT32_TYPE__*)(output + 16) = E;
+    *(WORD *)output = A;
+    *(WORD *)(output + 4) = B;
+    *(WORD *)(output + 8) = C;
+    *(WORD *)(output + 12) = D;
+    *(WORD *)(output + 16) = E;
 }
 
 void Sha1::getDigestString(char * output, bool toUpperCase) {
